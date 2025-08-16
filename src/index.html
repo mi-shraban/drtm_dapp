@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DRTM – Disaster Response Training Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js"></script>
+  <script src="index.js" defer></script>
+</head>
+<body>
+  <h1>Disaster Response Training Management (DRTM)</h1>
+
+  <section>
+    <h2>Connection</h2>
+    <button id="btnConnect">Connect MetaMask</button>
+    <p>Account: <span id="acct">–</span></p>
+    <p>Contract Address: <input id="contractAddr" placeholder="0x..." size="60">
+       <button id="btnLoad">Load</button>
+    </p>
+    <p>Owner: <span id="owner">–</span></p>
+    <p>Booking Fee (wei): <span id="bookingFee">–</span></p>
+  </section>
+
+  <section>
+    <h2>Register</h2>
+    <h3>Participant</h3>
+    <input id="pId" placeholder="id"><br>
+    <input id="pName" placeholder="name"><br>
+    <input id="pAge" placeholder="age" type="number"><br>
+    <input id="pGender" placeholder="gender"><br>
+    <input id="pDistrict" placeholder="district"><br>
+    <select id="pTraining">
+      <option value="0">FirstAid</option>
+      <option value="1">ShelterRebuild</option>
+      <option value="2">FoodSafety</option>
+    </select><br>
+    <button id="btnRegPart">Register Participant</button>
+    <div id="pRegMsg"></div>
+
+    <h3>Trainer</h3>
+    <input id="tId" placeholder="id"><br>
+    <input id="tName" placeholder="name"><br>
+    <input id="tDistrict" placeholder="district"><br>
+    <button id="btnRegTrainer">Register Trainer</button>
+    <div id="tRegMsg"></div>
+  </section>
+
+  <section>
+    <h2>Admin</h2>
+    <h3>Add Admin</h3>
+    <input id="newAdmin" placeholder="0x..."><br>
+    <button id="btnAddAdmin">Add Admin</button>
+    <div id="aAddMsg"></div>
+
+    <h3>Update Participant</h3>
+    <input id="updAddr" placeholder="participant addr"><br>
+    <select id="updTraining">
+      <option value="">(no change)</option>
+      <option value="0">FirstAid</option>
+      <option value="1">ShelterRebuild</option>
+      <option value="2">FoodSafety</option>
+    </select><br>
+    <label><input id="updCompleted" type="checkbox"> Set Completed</label><br>
+    <button id="btnAdminUpdate">Update</button>
+    <div id="updMsg"></div>
+  </section>
+
+  <section>
+    <h2>Booking</h2>
+    <input id="trainerAddr" placeholder="trainer addr"><br>
+    <input id="dayKey" placeholder="dayKey (utcTimestamp/86400)"><br>
+    <input id="startMin" placeholder="start minute"><br>
+    <input id="adminPayee" placeholder="admin addr"><br>
+    <button id="btnBook">Book Slot</button>
+    <div id="bookMsg"></div>
+  </section>
+
+  <section>
+    <h2>Schedules</h2>
+    <input id="schedTrainer" placeholder="trainer addr"><br>
+    <input id="schedDayKey" placeholder="dayKey"><br>
+    <button id="btnSched">Get Schedule</button>
+    <pre id="schedOut"></pre>
+  </section>
+</body>
+</html>
