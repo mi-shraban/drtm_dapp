@@ -1,15 +1,13 @@
-ganache-cli --deterministic --accounts 10 --port 8545 --host 127.0.0.1
+initiate ganache >>
+
+ganache-cli --accounts 10 --host 127.0.0.1 --port 8545 --mnemonic "myth lizard bonus scare over problem female client lizard pioneer like submit collect"
+
+>> compile solidity
 
 truffle compile
-
 truffle migrate --reset
 
->> after compilation update CONTRACT_ADDRESS in config.js taking from drtm.json
+TODO: >> after compilation update CONTRACT_ADDRESS in config.js taking from output of 'truffle migrate --reset'
 
 cd src
-
 python3 -m http.server 8000
-
-
->>RESET ganache:
-ganache-cli --deterministic --accounts 10 --host 0.0.0.0 --port 8545 --networkId 1337 --mnemonic "myth lizard bonus scare over problem female client lizard pioneer like submit collect"
