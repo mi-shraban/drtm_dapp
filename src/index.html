@@ -3,83 +3,138 @@
 <head>
   <meta charset="utf-8" />
   <title>DRTM – Disaster Response Training Management</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js"></script>
-  <script src="index.js" defer></script>
+  <!-- Load ethers.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <style>
+	body {
+	  font-family: Arial, sans-serif;
+	  max-width: 1200px;
+	  margin: 0 auto;
+	  padding: 20px;
+	}
+	section {
+	  margin-bottom: 30px;
+	  padding: 20px;
+	  border: 1px solid #ddd;
+	  border-radius: 5px;
+	}
+	input, select, button {
+	  margin: 5px;
+	  padding: 8px;
+	}
+	button {
+	  background-color: #007bff;
+	  color: white;
+	  border: none;
+	  cursor: pointer;
+	  border-radius: 3px;
+	}
+	button:hover {
+	  background-color: #0056b3;
+	}
+	.message {
+	  margin-top: 10px;
+	  padding: 10px;
+	  border-radius: 3px;
+	}
+	.success {
+	  background-color: #d4edda;
+	  color: #155724;
+	}
+	.error {
+	  background-color: #f8d7da;
+	  color: #721c24;
+	}
+  </style>
 </head>
 <body>
   <h1>Disaster Response Training Management (DRTM)</h1>
 
   <section>
-    <h2>Connection</h2>
-    <button id="btnConnect">Connect MetaMask</button>
-    <p>Account: <span id="acct">–</span></p>
-    <p>Contract Address: <input id="contractAddr" placeholder="0x..." size="60">
-       <button id="btnLoad">Load</button>
-    </p>
-    <p>Owner: <span id="owner">–</span></p>
-    <p>Booking Fee (wei): <span id="bookingFee">–</span></p>
+	<h2>Connection</h2>
+	<button id="btnConnect">Connect MetaMask</button>
+	<p>Account: <span id="acct">–</span></p>
+	<p>Contract Address: <input id="contractAddr" placeholder="0x..." size="60" value="">
+	   <button id="btnLoad">Load Contract</button>
+	</p>
+	<p>Owner: <span id="owner">–</span></p>
+	<p>Booking Fee (wei): <span id="bookingFee">–</span></p>
+	<div id="connectionStatus"></div>
   </section>
 
   <section>
-    <h2>Register</h2>
-    <h3>Participant</h3>
-    <input id="pId" placeholder="id"><br>
-    <input id="pName" placeholder="name"><br>
-    <input id="pAge" placeholder="age" type="number"><br>
-    <input id="pGender" placeholder="gender"><br>
-    <input id="pDistrict" placeholder="district"><br>
-    <select id="pTraining">
-      <option value="0">FirstAid</option>
-      <option value="1">ShelterRebuild</option>
-      <option value="2">FoodSafety</option>
-    </select><br>
-    <button id="btnRegPart">Register Participant</button>
-    <div id="pRegMsg"></div>
+	<h2>Register</h2>
+	<h3>Participant</h3>
+	<input id="pId" placeholder="ID (e.g., 1001)" type="number"><br>
+	<input id="pName" placeholder="Full Name"><br>
+	<input id="pAge" placeholder="Age" type="number" min="1" max="120"><br>
+	<input id="pGender" placeholder="Gender (e.g., Male/Female/Other)"><br>
+	<input id="pDistrict" placeholder="District"><br>
+	<select id="pTraining">
+	  <option value="0">First Aid</option>
+	  <option value="1">Shelter Rebuild</option>
+	  <option value="2">Food Safety</option>
+	</select><br>
+	<button id="btnRegPart">Register Participant</button>
+	<div id="pRegMsg" class="message"></div>
 
-    <h3>Trainer</h3>
-    <input id="tId" placeholder="id"><br>
-    <input id="tName" placeholder="name"><br>
-    <input id="tDistrict" placeholder="district"><br>
-    <button id="btnRegTrainer">Register Trainer</button>
-    <div id="tRegMsg"></div>
+	<h3>Trainer</h3>
+	<input id="tId" placeholder="Trainer ID (e.g., 2001)" type="number"><br>
+	<input id="tName" placeholder="Trainer Name"><br>
+	<input id="tDistrict" placeholder="District"><br>
+	<button id="btnRegTrainer">Register Trainer</button>
+	<div id="tRegMsg" class="message"></div>
   </section>
 
   <section>
-    <h2>Admin</h2>
-    <h3>Add Admin</h3>
-    <input id="newAdmin" placeholder="0x..."><br>
-    <button id="btnAddAdmin">Add Admin</button>
-    <div id="aAddMsg"></div>
+	<h2>Admin Functions</h2>
+	<h3>Add Admin</h3>
+	<input id="newAdmin" placeholder="0x..." size="50"><br>
+	<button id="btnAddAdmin">Add Admin</button>
+	<div id="aAddMsg" class="message"></div>
 
-    <h3>Update Participant</h3>
-    <input id="updAddr" placeholder="participant addr"><br>
-    <select id="updTraining">
-      <option value="">(no change)</option>
-      <option value="0">FirstAid</option>
-      <option value="1">ShelterRebuild</option>
-      <option value="2">FoodSafety</option>
-    </select><br>
-    <label><input id="updCompleted" type="checkbox"> Set Completed</label><br>
-    <button id="btnAdminUpdate">Update</button>
-    <div id="updMsg"></div>
+	<h3>Update Participant</h3>
+	<input id="updAddr" placeholder="Participant address (0x...)" size="50"><br>
+	<select id="updTraining">
+	  <option value="">(no change to training type)</option>
+	  <option value="0">First Aid</option>
+	  <option value="1">Shelter Rebuild</option>
+	  <option value="2">Food Safety</option>
+	</select><br>
+	<label><input id="updCompleted" type="checkbox"> Mark Training as Completed</label><br>
+	<button id="btnAdminUpdate">Update Participant</button>
+	<div id="updMsg" class="message"></div>
   </section>
 
   <section>
-    <h2>Booking</h2>
-    <input id="trainerAddr" placeholder="trainer addr"><br>
-    <input id="dayKey" placeholder="dayKey (utcTimestamp/86400)"><br>
-    <input id="startMin" placeholder="start minute"><br>
-    <input id="adminPayee" placeholder="admin addr"><br>
-    <button id="btnBook">Book Slot</button>
-    <div id="bookMsg"></div>
+	<h2>Booking</h2>
+	<h3>Book Training Slot</h3>
+	<input id="trainerAddr" placeholder="Trainer address (0x...)" size="50"><br>
+	<input id="dayKey" placeholder="Day Key (e.g., 19940 for today)" type="number"><br>
+	<input id="startMin" placeholder="Start minute (e.g., 540 for 9:00 AM)" type="number"><br>
+	<input id="adminPayee" placeholder="Admin address to receive fee (0x...)" size="50"><br>
+	<button id="btnBook">Book Slot</button>
+	<div id="bookMsg" class="message"></div>
+	
+	<h4>Time Helper</h4>
+	<p>Common time slots:</p>
+	<ul>
+	  <li>9:00 AM = 540 minutes</li>
+	  <li>9:30 AM = 570 minutes</li>
+	  <li>10:00 AM = 600 minutes</li>
+	  <li>10:30 AM = 630 minutes</li>
+	</ul>
+	<p>Day Key = Math.floor(Date.now() / 1000 / 86400) ≈ <span id="todayKey">19940</span></p>
   </section>
 
   <section>
-    <h2>Schedules</h2>
-    <input id="schedTrainer" placeholder="trainer addr"><br>
-    <input id="schedDayKey" placeholder="dayKey"><br>
-    <button id="btnSched">Get Schedule</button>
-    <pre id="schedOut"></pre>
+	<h2>View Schedules</h2>
+	<input id="schedTrainer" placeholder="Trainer address (0x...)" size="50"><br>
+	<input id="schedDayKey" placeholder="Day Key" type="number"><br>
+	<button id="btnSched">Get Schedule</button>
+	<pre id="schedOut"></pre>
   </section>
+
+  <script src="index.js"></script>
 </body>
 </html>
