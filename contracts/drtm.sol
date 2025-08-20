@@ -3,12 +3,11 @@
 pragma solidity >=0.7.0 < 0.9.0;
 
 
-/**
- * @title Disaster Response Training Management
+/*
+* @title Disaster Response Training Management
 */
 
 contract DRTM {
-    
     // roles
     address public ownerAddr;
     mapping(address => bool) public isAdmin;
@@ -51,6 +50,22 @@ contract DRTM {
     mapping(address => Part) public parts;
     mapping(address => Trainer) public trainers;
 
+    // iteration helpers
+    address[] public partsList;
+    address[] public trainersList;
+
+    // district -> count
+    mapping(string => uint256) private districtCounts;
+    // keep distinct districts so frontend can enumerate/sort off-chain
+    string[] private districtList;
+    mapping(string => bool) private districtSeen;
+    // reverse index for search by district
+    mapping(string => address[]) private partsByDistrict;
+
+    // id counters (auto-generated)
+    uint256 public nextPartId = 1;
+    uint256 public nextTrainerId = 1;
+
     // bookings
     uint256 public bookingFee = 0.000000000000001 ether; // Owner can change preset booking fee.
 
@@ -72,7 +87,6 @@ contract DRTM {
     event OwnerTransferred(address indexed oldOwner, address indexed newOwner);
     event AdminAdded(address indexed admin);
     event AdminRemoved(address indexed admin);
-
     event PartRegistered(
         address indexed addr,
         uint256 id,
@@ -82,22 +96,18 @@ contract DRTM {
         string district,
         TrainingType trainingType
     );
-
     event TrainerRegistered(
         address indexed addr,
         uint256 id,
         string name,
         string district
     );
-
     event PartUpdated(
         address indexed partAddr,
         TrainingType trainingType,
         bool hasCompletedTraining
     );
-
     event BookingFeeChanged(uint256 newFee);
-
     event SlotBooked(
         address indexed partAddr,
         address indexed trainerAddr,
@@ -115,7 +125,7 @@ contract DRTM {
         emit AdminAdded(msg.sender);
     }
 
-    // Admin methods
+    // Admin/Owner methods
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Zero address");
         emit OwnerTransferred(ownerAddr, newOwner);
@@ -143,7 +153,6 @@ contract DRTM {
     
     // participant registration
     function registerPart(
-        uint256 _id,
         string calldata _name,
         uint8 _age,
         string calldata _gender,
@@ -151,14 +160,15 @@ contract DRTM {
         TrainingType _trainingtype
     ) external {
         require(!parts[msg.sender].exists, "Already registered as participant");
-        require(bytes(_name).length > 0, "Name cannot be empty");
-        require(bytes(_gender).length > 0, "Gender cannot be empty");
-        require(bytes(_district).length > 0, "District cannot be empty");
-        require(_age > 0, "Age must be greater than 0");
+        require(bytes(_name).length > 0, "Name required");
+        require(bytes(_gender).length > 0, "Gender required");
+        require(bytes(_district).length > 0, "District required");
+        require(_age > 0, "Age must be > 0");
         require(uint8(_trainingtype) <= uint8(TrainingType.FoodSafety), "Invalid training type");
 
+        uint256 newId = nextPartId++;
         parts[msg.sender] = Part({
-            id: _id,
+            id: newId,
             name: _name,
             age: _age,
             gender: _gender,
@@ -167,35 +177,41 @@ contract DRTM {
             hasCompletedTraining: false,
             exists: true
         });
+        partsList.push(msg.sender);
+
+        // district indexes
+        districtCounts[_district] += 1;
+        partsByDistrict[_district].push(msg.sender);
+        if (!districtSeen[_district]) {
+            districtSeen[_district] = true;
+            districtList.push(_district);
+        }
 
         emit PartRegistered(
             msg.sender,
-            _id,
-            _name,
-            _age,
-            _gender,
-            _district,
-            _trainingtype
+            newId, _name, _age, _gender, _district, _trainingtype
         );
     }
 
+    // trainer registration
     function registerTrainer(
-        uint256 _id,
         string calldata _name,
         string calldata _district
     ) external {
         require(!trainers[msg.sender].exists, "Already registered as trainer");
-        require(bytes(_name).length > 0, "Name cannot be empty");
-        require(bytes(_district).length > 0, "District cannot be empty");
+        require(bytes(_name).length > 0, "Name required");
+        require(bytes(_district).length > 0, "District required");
 
+        uint256 newId = nextTrainerId++;
         trainers[msg.sender] = Trainer({
-            id: _id,
+            id: newId,
             name: _name,
             district: _district,
             exists: true
         });
+        trainersList.push(msg.sender);
 
-        emit TrainerRegistered(msg.sender, _id, _name, _district);
+        emit TrainerRegistered(msg.sender, newId, _name, _district);
     }
 
     // participant updates [Admin only]
@@ -220,6 +236,7 @@ contract DRTM {
 
         emit PartUpdated(partAddr, p.trainingType, p.hasCompletedTraining);
     }
+
 
     // booking logic
     function bookSlot(
@@ -270,10 +287,7 @@ contract DRTM {
     function getTrainerSchedByDay(
         address trainerAddr,
         uint32 dayKey
-    )
-        external
-        view
-        returns (
+    ) external view returns (
             address[] memory partsOut,
             uint16[] memory startMinsOut,
             uint16[] memory endMinsOut
@@ -281,7 +295,6 @@ contract DRTM {
     {
         uint16[] storage keys = trainerDaySlots[trainerAddr][dayKey];
         uint256 n = keys.length;
-
         partsOut = new address[](n);
         startMinsOut = new uint16[](n);
         endMinsOut = new uint16[](n);
@@ -294,6 +307,21 @@ contract DRTM {
             endMinsOut[i] = b.endMin;
         }
     }
+   
+    function getTrainerDayStartMins(
+        address trainerAddr,
+        uint32 dayKey
+    ) external view returns (uint16[] memory) {
+        return trainerDaySlots[trainerAddr][dayKey];
+    }
+
+    function isSlotAvailable(
+        address trainerAddr,
+        uint32 dayKey,
+        uint16 startMin
+    ) external view returns (bool) {
+        return !bkgs[trainerAddr][dayKey][startMin].exists;
+    }
 
     function getSlot(
         address trainerAddr,
@@ -302,8 +330,23 @@ contract DRTM {
     ) external view returns (Bkg memory) {
         return bkgs[trainerAddr][dayKey][startMin];
     }
-    
-    // utilities
+
+    // --- District search/count ---
+    function districts() external view returns (string[] memory) {
+        return districtList;
+    }
+
+    function districtCount(string calldata name) external view returns (uint256) {
+        return districtCounts[name];
+    }
+
+    function getParticipantsByDistrict(
+        string calldata name
+    ) external view returns (address[] memory) {
+        return partsByDistrict[name];
+    }
+
+    // --- Utilities ---
     function hhmmToMins(uint16 hour24, uint16 min) external pure returns (uint16) {
         require(hour24 < 24 && min < 60, "Invalid time");
         return uint16(hour24 * 60 + min);
