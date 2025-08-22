@@ -8,7 +8,7 @@ async function loadSchedule() {
     }
     
     try {
-        const dayKey = Math.floor(new Date(date).getTime() / 1000 / 86400);
+        const dayKey = Math.floor(new Date(date + 'T00:00:00Z').getTime() / 1000 / 86400);
         const scheduleDisplay = document.getElementById('scheduleDisplay');
         scheduleDisplay.innerHTML = '<div class="loading">Loading schedules...</div>';
         

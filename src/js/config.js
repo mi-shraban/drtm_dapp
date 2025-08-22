@@ -1,5 +1,5 @@
 // Contract configuration - HAVE TO UPDATE THESE VALUES after compilation
-const CONTRACT_ADDRESS = '0x2E04A1BB14afc60bC08Dd0B051b111aF35D1593A'; // Replace with your deployed contract address
+const CONTRACT_ADDRESS = '0x316Dd1B5594391F06b8EF215b111BF91119c68a2'; // Replace with your deployed contract address
 const CONTRACT_ABI = [
     {
         "inputs": [],

@@ -1,13 +1,15 @@
-initiate ganache >>
+TODOs and Commands>>
 
-ganache-cli --accounts 10 --host 127.0.0.1 --port 8545 --mnemonic "myth lizard bonus scare over problem female client lizard pioneer like submit collect"
+ganache-cli --accounts 10 --host 127.0.0.1 --port 8545 --mnemonic "myth lizard bonus scare over problem female client lizard pioneer like money collect"
+>> connect to metamask, add a few accounts to metamask
 
 >> compile solidity
 
 truffle compile
 truffle migrate --reset
 
-TODO: >> after compilation update CONTRACT_ADDRESS in config.js taking from output of 'truffle migrate --reset'
+>> after compilation update CONTRACT_ADDRESS in config.js taking from output of 'truffle migrate --reset'
 
-cd src
-python3 -m http.server 8000
+cd src && python3 -m http.server 8000
+
+## '>>' : TODO, Other lines are "commands"

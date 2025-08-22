@@ -10,7 +10,7 @@ async function checkAvailability() {
     }
     
     try {
-        const dayKey = Math.floor(new Date(date).getTime() / 1000 / 86400);
+        const dayKey = Math.floor(new Date(date + 'T00:00:00Z').getTime() / 1000 / 86400);
         const available = await contract.methods.isSlotAvailable(trainerAddr, dayKey, parseInt(startMin)).call();
         
         const resultDiv = document.getElementById('availabilityResult');
@@ -19,7 +19,8 @@ async function checkAvailability() {
         } else {
             resultDiv.innerHTML = '<div class="alert alert-error"> Slot is already booked!</div>';
         }
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error checking availability:', error);
         showAlert('Error checking availability: ' + error.message, 'error');
     }
@@ -47,8 +48,14 @@ async function bookSlot() {
         return;
     }
     
-    try {
-        const dayKey = Math.floor(new Date(date).getTime() / 1000 / 86400);
+    try{
+        const participant = await contract.methods.parts(currentAccount).call();
+        if (!participant.exists) {
+            showAlert('You must be a registered participant to book a slot!', 'error');
+            return;
+        }
+
+        const dayKey = Math.floor(new Date(date + 'T00:00:00Z').getTime() / 1000 / 86400);
         const available = await contract.methods.isSlotAvailable(trainerAddr, dayKey, parseInt(startMin)).call();
         
         if (!available) {
@@ -68,11 +75,17 @@ async function bookSlot() {
         
         showAlert('Booking Successful! Your training slot has been reserved.', 'success');
         
-        // Clear availability result
         document.getElementById('availabilityResult').innerHTML = '';
         
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error booking slot:', error);
-        showAlert('Error booking slot: ' + error.message, 'error');
+        if (error.message.includes('revert')) {
+            const reason = error.message.split('revert ')[1]?.split('\n')[0] || 'Transaction failed';
+            showAlert('Boorking Failed: ' + reason, 'error');
+        }
+        else{
+            showAlert('Error booking slot: ' + error.message, 'error');
+        }
     }
 }

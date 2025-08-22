@@ -112,23 +112,33 @@ async function loadTrainersAndAdmins() {
         // Load admins
         const adminSelect = document.getElementById('adminPayee');
         adminSelect.innerHTML = '<option value="">Select Admin</option>';
-        
+
+        // Check owner first
+        const owner = await contract.methods.ownerAddr().call();
+        const option1 = document.createElement('option');
+        option1.value = owner;
+        option1.textContent = owner.substring(0, 8) + '... (Owner)';
+        adminSelect.appendChild(option1);
+
+        // Check all participants for admin status
         const nextPartId = await contract.methods.nextPartId().call();
-        for (let i = 0; i < nextPartId; i++) {
+        for (let i = 0; i < nextPartId - 1; i++) {
             try {
                 const partAddr = await contract.methods.partsList(i).call();
-                const isAdmin = await contract.methods.isAdmin(partAddr).call();
-                if (isAdmin) {
-                    const option = document.createElement('option');
-                    option.value = partAddr;
-                    option.textContent = partAddr.substring(0, 8) + '...';
-                    adminSelect.appendChild(option);
+                if (partAddr !== owner) { // Don't duplicate owner
+                    const isAdmin = await contract.methods.isAdmin(partAddr).call();
+                    if (isAdmin) {
+                        const option = document.createElement('option');
+                        option.value = partAddr;
+                        option.textContent = partAddr.substring(0, 8) + '... (Admin)';
+                        adminSelect.appendChild(option);
+                    }
                 }
             } catch (e) {
-                // Skip if address doesn't exist
                 break;
             }
         }
+
     } catch (error) {
         console.error('Error loading trainers/admins:', error);
     }
